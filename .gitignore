@@ -1,3 +1,5 @@
 output/
 .DS_Store
 .env
+config/cv_en.yaml
+config/cv_es.yaml

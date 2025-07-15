@@ -52,7 +52,7 @@
 {%-import 'sections/talks.jinja' as talks_macros-%}
 {%-import 'sections/publications.jinja' as publications_macros-%}
 {%-import 'sections/headings.jinja' as headings_macros-%}
-
+{%-import 'sections/profile.jinja' as profile_macros-%}
 
 {{-headings_macros.render_heading(heading) }}
 
@@ -61,6 +61,10 @@
 {%-endif-%}
 
 \begin{document}
+
+{% if professional_profile %}
+    {{ profile_macros.render(professional_profile) }}
+{% endif %}
 
 {% if sections %}
   {%-for section in sections-%}

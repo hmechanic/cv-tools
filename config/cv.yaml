@@ -19,6 +19,13 @@ subheading:
         url: "https://linkedin.com/in/johndoe"
         show_below: false
 
+professional_profile:
+    title: "Professional Profile"
+    content: "Mechanical engineer focused on modeling and analyzing energy systems, with a solid background in fluid mechanics, turbomachinery, combustion, CFD, and emerging technologies (hydrogen and satellite-based emissions monitoring). I merge innovation and sustainability to advance ESG goals and the energy transition.
+
+
+    Skilled in managing and analyzing technical data, and in writing technical, regulatory, and sustainability reports. Known for leadership, clear communication, and effective collaboration in multidisciplinary, highly regulated settings. Disciplined and creative, I spearhead high-impact environmental initiatives that bolster corporate sustainability strategies."
+
 sections:
   - type: education
     content:

@@ -201,12 +201,14 @@ The `heading` parameter sets the main title of the CV.
 | Field | Type | Description | Required |
 |-------|------|-------------|-----------|
 | `name` | string | The name of the author, displayed as the main heading. | Yes |
+| `language` | string | The language of the CV. Supported values are `en` (English) and `es` (Spanish). Defaults to `en`. | No |
 
 Example:
 
 ```yaml
 heading:
   name: "John Doe" # The name of the CV author
+  language: "en"
 ```
 
 ## Subheading
@@ -279,6 +281,7 @@ The `sections` parameter allows you to define different sections of your CV, eac
 | `talks`        | Lists talks, workshops, and lectures given.             |
 | `publications` | Lists research papers, articles, or other publications. |
 | `newpage`      | Inserts a new page in the CV.                           |
+| `professional_profile` | Provides a brief summary of your professional background and skills. |
 
 Each section type has specific fields and formatting rules. Below are detailed descriptions and example YAML configurations for each section type.
 
@@ -521,6 +524,25 @@ sections:
   - type: newpage
 ```
 
+### 8. Professional Profile
+
+The `professional_profile` section is used to provide a brief summary of your professional background and skills.
+
+| Key       | Type   | Description                                                     | Required |
+| --------- | ------ | --------------------------------------------------------------- | -------- |
+| `type`    | string | Must be `professional_profile`.                                 | Yes      |
+| `title`   | string | The title of the section (e.g., "Professional Profile").        | Yes      |
+| `content` | string | A paragraph describing your professional profile.               | Yes      |
+
+Example:
+
+```yaml
+sections:
+  - type: professional_profile
+    title: "Professional Profile"
+    content: "A highly motivated and results-oriented software engineer with over 5 years of experience in developing and maintaining web applications. Proficient in Python, JavaScript, and various cloud technologies. Seeking to leverage my skills to contribute to a dynamic and innovative team."
+```
+
 An example of a complete YAML configuration can be found [here](config/cv.yaml).
 
 ## Using Special Characters
@@ -599,6 +621,7 @@ Managing your publications is straightforward with a BibTeX file. The BibTeX fil
 ```
 
 Your publications will be included in the CV in the order they appear in the .bib file. An example BibTeX data file is provided [here](config/publications.bib).
+
 
 # Contributing
 
