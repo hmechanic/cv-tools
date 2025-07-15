@@ -287,7 +287,21 @@ Each section type has specific fields and formatting rules. Below are detailed d
 
 ### 1. Education
 
-The `education` section is used to list your academic qualifications. It typically includes details like the university name, location, dates, degree, honors, thesis title, and supervisor.
+The `education` section is used to list your academic qualifications.
+
+| Key       | Type   | Description                  | Required |
+| --------- | ------ | ---------------------------- | -------- |
+| `type`    | string | Must be `education`.         | Yes      |
+| `content` | list   | List of education entries.   | Yes      |
+
+**Education Entry**
+
+| Key      | Type   | Description                                                                                             | Required |
+| -------- | ------ | ------------------------------------------------------------------------------------------------------- | -------- |
+| `name`   | string | Title of the education section.                                                                         | Yes      |
+| `entity` | list   | List of education entities. This is used to group relevant educational experiences under a single section. | Yes      |
+
+**Education Entity**
 
 | Field          | Type   | Description                                     | Required |
 | -------------- | ------ | ----------------------------------------------- | -------- |
@@ -305,18 +319,20 @@ Example:
 sections:
   - type: education
     content:
-      - university: "Fictional University"
-        location: "Imaginaria, Wonderland"
-        dates: "September 2021 - June 2024"
-        degree: "Bachelor of Science in Computer Science"
-        honors: "Magna Cum Laude"
-        thesis_title: "An Exploration of Quantum Computing in Virtual Environments"
-        supervisor: "Dr. Alice Wonder"
-      - university: "Imaginary Institute of Technology"
-        location: "Nowhere City, Utopia"
-        dates: "August 2018 - May 2021"
-        degree: "Associate Degree in Artificial Intelligence"
-        supervisor: "Dr. Bob Builder"
+      - name: "Education"
+        entity:
+          - university: "Fictional University"
+            location: "Imaginaria, Wonderland"
+            dates: "September 2021 - June 2024"
+            degree: "Bachelor of Science in Computer Science"
+            honors: "Magna Cum Laude"
+            thesis_title: "An Exploration of Quantum Computing in Virtual Environments"
+            supervisor: "Dr. Alice Wonder"
+          - university: "Imaginary Institute of Technology"
+            location: "Nowhere City, Utopia"
+            dates: "August 2018 - May 2021"
+            degree: "Associate Degree in Artificial Intelligence"
+            supervisor: "Dr. Bob Builder"
 ```
 
 ![education-section](docs/img/education-section.png)
@@ -422,29 +438,40 @@ Example:
 
 ### 4. Skills
 
-| Key       | Description       |
-| --------- | ----------------- |
-| `type`    | Must be `skills`. |
-| `content` | List of skills.   |
+The `skills` section is used to list your skills, languages, tools, and technologies.
+
+| Key       | Type   | Description            | Required |
+| --------- | ------ | ---------------------- | -------- |
+| `type`    | string | Must be `skills`.      | Yes      |
+| `content` | list   | List of skill entries. | Yes      |
 
 **Skills Entry**
 
-| Key    | Description                     |
-| ------ | ------------------------------- |
-| `name` | Title of the skills category.   |
-| `data` | List of skills or technologies. |
+| Key      | Type   | Description                                                                               | Required |
+| -------- | ------ | ----------------------------------------------------------------------------------------- | -------- |
+| `name`   | string | Title of the skills section.                                                              | Yes      |
+| `entity` | list   | List of skill entities. This is used to group relevant skills together under a single section. | Yes      |
+
+**Skills Entity**
+
+| Key    | Type   | Description                     | Required |
+| ------ | ------ | ------------------------------- | -------- |
+| `name` | string | Title of the skills category.   | Yes      |
+| `data` | string | List of skills or technologies. | Yes      |
 
 Example:
 
 ```yaml
 - type: skills
   content:
-    - name: "Spoken Languages"
-      data: "English (Fluent), Spanish (Intermediate)"
-    - name: "Programming Languages"
-      data: "Python, Java, C++, SQL, JavaScript"
-    - name: "Tools and Technologies"
-      data: "AWS, Docker, Kubernetes, TensorFlow, Git, Jenkins, Linux, Jira"
+    - name: "Skills"
+      entity:
+        - name: "Spoken Languages"
+          data: "English (Fluent), Spanish (Intermediate)"
+        - name: "Programming Languages"
+          data: "Python, Java, C++, SQL, JavaScript"
+        - name: "Tools and Technologies"
+          data: "AWS, Docker, Kubernetes, TensorFlow, Git, Jenkins, Linux, Jira"
 ```
 
 ![skills-section](docs/img/skills-section.png)
