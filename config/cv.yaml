@@ -1,6 +1,6 @@
 heading:
   name: "John Doe" # mandatory
-
+  language: "es" # default "en" for English, "es" for Spanish
 subheading:
   - type: links
     content:

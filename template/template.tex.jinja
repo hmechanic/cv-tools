@@ -41,6 +41,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \documentclass{resume} % Use the custom resume.cls style
+{% if heading.language == 'es' %}
+\usepackage[spanish]{babel}
+{% endif %}
 
 {%-import 'sections/education.jinja' as education_macros-%}
 {%-import 'sections/bullets.jinja' as bullets_macros-%}
@@ -54,7 +57,7 @@
 {{-headings_macros.render_heading(heading) }}
 
 {%-if subheading-%}
-  {{ headings_macros.render_subheading(subheading) }}
+  {{ headings_macros.render_subheading(heading,subheading) }}
 {%-endif-%}
 
 \begin{document}
