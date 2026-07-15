@@ -1,0 +1,36 @@
+Prompt
+
+Generar un perfil profesional basado en la siguiente hoja de viday oferta de trabajo, el perfíl debe resaltar habilidades relevantes
+experiencias y logros que se alineen con los requerimientos de la oferta de trabajo . Quiero que se mantenga un estilo de redacción natural, el perfil profesional debe ser de máximo dos párrafos. 
+
+# ROL Y OBJETIVO
+Actúa como un experto en redacción de CVs y reclutador profesional. Tu objetivo es crear un perfil profesional convincente y personalizado para mi hoja de vida. 
+El perfil debe estar específicamente diseñado para captar la atención del reclutador de la oferta de trabajo proporcionada.
+
+# CONTEXTO
+A continuación, te proporcionaré dos documentos:
+1.  **Mi Hoja de Vida:** Contiene mi experiencia completa, habilidades y logros.
+2.  **La Oferta de Trabajo:** Describe el puesto, los requisitos y las responsabilidades deseadas por la empresa.
+
+# INSTRUCCIONES DETALLADAS
+1.  **Analiza la Oferta de Trabajo:** Primero, identifica las 3-5 competencias, habilidades y requisitos más importantes que se mencionan en la oferta (ej: "gestión de proyectos con metodologías ágiles", "experiencia en SaaS", "liderazgo de equipos", "análisis de datos con SQL").
+2.  **Analiza mi Hoja de Vida:** Luego, busca en mi hoja de vida experiencias, logros y habilidades que demuestren de manera directa mi capacidad en esas áreas clave que identificaste. Prioriza logros cuantificables (ej: "aumenté la eficiencia en un 20%", "gestioné un presupuesto de $50,000").
+3.  **Redacta el Perfil Profesional:** Con la información anterior, redacta un perfil profesional de MÁXIMO DOS PÁRRAFOS.
+    *   **Primer Párrafo:** Debe ser una introducción potente. Menciona mis años de experiencia, mi área de especialización principal y cómo se alinea con el rol ofrecido. Integra de forma natural las palabras clave más importantes de la oferta.
+    *   **Segundo Párrafo:** Enfócate en 2-3 logros o habilidades específicas de mi hoja de vida que respondan directamente a los requisitos más críticos de la oferta. Utiliza verbos de acción y, si es posible, datos cuantificables.
+4.  **Tono y Estilo:** El tono debe ser profesional, seguro y orientado a resultados. La redacción debe ser natural, fluida y concisa. Evita clichés y frases genéricas.
+
+# RESTRICCIONES
+*   No inventes información que no esté en mi hoja de vida.
+*   El perfil no debe superar los dos párrafos.
+*   No te presentes como una IA. Escribe el perfil en primera persona ("Soy un profesional...", "He liderado...").
+
+---
+
+# DOCUMENTOS DE ENTRADA
+
+## 1. MI HOJA DE VIDA:
+[PEGA AQUÍ EL CONTENIDO COMPLETO Y LIMPIO DE TU HOJA DE VIDA]
+
+## 2. LA OFERTA DE TRABAJO:
+[PEGA AQUÍ EL TEXTO COMPLETO DE LA OFERTA DE TRABAJO]

@@ -1,19 +1,19 @@
 #!/bin/bash
 
 # MIT License
-# 
+#
 # Copyright (c) 2024 Phone Thiha Kyaw
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,6 +29,9 @@ usage() {
     info "  --tex-only     Only generate the LaTeX (.tex) file without producing a PDF"
     info "  --no-deps      Skip checking and installing dependencies"
     info "  -o, --output   Specify the output LaTeX file (default: output/output.tex)"
+    info "  --llm          Enable LLM processing for profile generation"
+    info "  --enhance-experience  Enhance experience bullets with LLM"
+    info "  --job-offer    Specify job offer file for LLM processing"
     info "  -h, --help     Display this help message and exit"
     exit 1
 }
@@ -42,7 +45,7 @@ command_exists() {
 check_latex_package() {
     local package="$1"
     PACKAGE_INFO=$(tlmgr info "$package" 2>/dev/null)
-    
+
     if echo "$PACKAGE_INFO" | grep -q -E "installed:\s*Yes"; then
         success "LaTeX package $package is already installed."
     else
@@ -119,6 +122,16 @@ while [[ "$1" != "" ]]; do
             OUTPUT_FILE="$1"
             OUTPUT_DIR="$(dirname "$OUTPUT_FILE")"
             ;;
+        -llm | --llm )
+            USE_LLM=1
+            ;;
+        --enhance-experience )
+            ENHANCE_EXPERIENCE=1
+            ;;
+        --job-offer )
+            shift
+            JOB_OFFER_FILE="$1"  # Custom path if provided
+            ;;
         -h | --help )
             usage
             ;;
@@ -129,6 +142,11 @@ while [[ "$1" != "" ]]; do
     esac
     shift
 done
+
+# Default value for LLM use for generate profile section with llm
+USE_LLM=${USE_LLM:-0}
+ENHANCE_EXPERIENCE=${ENHANCE_EXPERIENCE:-0}
+JOB_OFFER_FILE="${JOB_OFFER_FILE:-$CONFIG_DIR/job_offer.txt}"
 
 # Start of the script
 info "Intializing the script..."
@@ -143,13 +161,40 @@ cp "$TEMPLATE_DIR/resume.cls" "$OUTPUT_DIR/"
 
 # Run the Python script with the provided or default paths
 info "Generating LaTeX file..."
-python "$SCRIPT_DIR/generate_latex.py" "$CONFIG_FILE" "$LATEX_TEMPLATE_FILE" "$OUTPUT_FILE"
+
+# Build Python command based on options
+PYTHON_CMD=(
+    python
+    "$SCRIPT_DIR/generate_latex.py"
+    "$CONFIG_FILE"
+    "$LATEX_TEMPLATE_FILE"
+    "$OUTPUT_FILE"
+)
+
+if [ "$USE_LLM" -eq 1 ] || [ "$ENHANCE_EXPERIENCE" -eq 1 ]; then
+    info "Using LLM features..."
+
+    PYTHON_CMD+=(--job-offer "$JOB_OFFER_FILE")
+
+    if [ "$USE_LLM" -eq 1 ]; then
+        PYTHON_CMD+=(--llm)
+    fi
+
+    if [ "$ENHANCE_EXPERIENCE" -eq 1 ]; then
+        PYTHON_CMD+=(--enhance-experience)
+    fi
+else
+    info "Using standard generation (no LLM enhancements)..."
+fi
+
+# Execute arguments directly so file paths cannot inject shell syntax.
+"${PYTHON_CMD[@]}"
 
 if [ $? -eq 0 ]; then
         success "OK."
-    else
-        error "Failed"
-        exit 1
+else
+    error "Failed"
+    exit 1
 fi
 
 # Notify the user that LaTeX generation is complete
@@ -166,7 +211,7 @@ if [ "$GENERATE_TEX_ONLY" -eq 0 ]; then
         if command_exists pdflatex; then
             success "pdflatex found."
         else
-            error "Error: command pdflatex not found." 
+            error "Error: command pdflatex not found."
             error "LaTeX is not installed. Please install LaTeX (e.g., TeX Live) to proceed."
             exit 1
         fi
@@ -188,10 +233,10 @@ if [ "$GENERATE_TEX_ONLY" -eq 0 ]; then
         PYTHON_PATH=$(command -v python)
         success "python found. Using python version $PYTHON_VERSION from $PYTHON_PATH"
 
-        # Check and install required Python packages from requirements.txt
+        # Install the reviewed Python dependency set from the lockfile.
         info "Checking for required Python packages..."
-        if [ -f "$CURRENT_DIR/requirements.txt" ]; then
-            pip install -r $CURRENT_DIR/requirements.txt
+        if [ -f "$CURRENT_DIR/requirements.lock" ]; then
+            python -m pip install --require-hashes -r "$CURRENT_DIR/requirements.lock"
             if [ $? -eq 0 ]; then
                 success "All required Python packages have been installed."
             else
@@ -199,7 +244,7 @@ if [ "$GENERATE_TEX_ONLY" -eq 0 ]; then
                 exit 1
             fi
         else
-            error "requirements.txt file not found."
+            error "requirements.lock file not found."
             exit 1
         fi
 

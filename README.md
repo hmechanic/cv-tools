@@ -10,6 +10,8 @@ A tool to automate the creation of professional LaTeX-based CVs.
 ![LaTeX](https://img.shields.io/badge/latex-%23008080.svg?style=for-the-badge&logo=latex&logoColor=white)
 ![Jinja](https://img.shields.io/badge/jinja-white.svg?style=for-the-badge&logo=jinja&logoColor=black)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-000000?style=for-the-badge&logo=groq&logoColor=white)
 
 ![cover photo](docs/img/cover.png)
 
@@ -25,6 +27,10 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 - **Flexible Configuration**: Easy-to-edit configuration files to personalize your CV.
 - **BibTeX Support**: Automatically generate a formatted list of publications from a BibTeX file.
 - **Automated Build Process**: Scripted build process to generate the final PDF CV.
+- **LLM Integration**: AI-powered personalization using Groq or OpenRouter APIs.
+- **Experience Enhancement**: Automatically improve experience bullets with quantifiable achievements.
+- **Professional Profile Generation**: AI-generated personalized professional summaries.
+- **Multi-API Support**: Choose between Groq and OpenRouter for LLM processing.
 
 # Build Status
 
@@ -37,6 +43,12 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Usage](#usage)
+- [LLM Integration](#llm-integration)
+  - [Overview](#llm-overview)
+  - [API Providers](#api-providers)
+  - [Environment Setup](#environment-setup)
+  - [LLM Features](#llm-features)
+  - [Usage Examples](#llm-usage-examples)
 - [YAML Configuration](#yaml-configuration)
   - [Heading](#heading)
   - [Subheading](#subheading)
@@ -120,8 +132,33 @@ Set up a Python virtual environment and install dependencies:
 ```bash
 $ python3 -m venv cv-tools
 $ source cv-tools/bin/activate
-$ pip install -r requirements.txt
+$ pip install --require-hashes -r requirements.lock
 ```
+
+#### LLM Setup (Optional)
+
+If you plan to use AI-powered features, configure your API keys:
+
+1. **Create `.env` file:**
+   ```bash
+   $ cp .env.example .env  # If example exists, or create manually
+   ```
+
+2. **Add your API keys to `.env`:**
+   ```bash
+   # Choose your provider
+   API_PROVIDER="groq"  # or "openrouter"
+
+   # Add your API keys
+   GROQ_API_KEY="your-groq-key-here"
+   OPENROUTER_API_KEY="your-openrouter-key-here"
+   ```
+
+3. **Create job offer file:**
+   ```bash
+   $ cp config/job_offer.txt.example config/job_offer.txt
+   # Edit config/job_offer.txt with your target job description
+   ```
 
 If you plan to use Option 2 (Local LaTeX Setup), ensure all required LaTeX packages are installed. The necessary packages are listed in the `packages.list` file.
 
@@ -130,6 +167,8 @@ You can use the tlmgr command to install the packages as follows:
 ```bash
 $ tlmgr install <package1> <package2> ...
 ```
+
+**Note:** If you plan to use LLM features with the OpenRouter API, the `requests` library is required and is included in `requirements.txt`.
 
 ## Usage
 
@@ -144,6 +183,34 @@ $ ./run.sh
 ```
 
 This command will also check and install all necessary dependencies before generating a `.tex` file and a PDF file, both of which will be saved in the `output` directory.
+
+## LLM-Enhanced CV Generation
+
+CV Tools supports AI-powered personalization using Large Language Models. You can enhance your CV with job-specific content using the following options:
+
+### Professional Profile Generation
+
+Generate an AI-crafted professional summary tailored to your target job:
+
+```bash
+$ ./run.sh --llm --job-offer config/job_offer.txt
+```
+
+### Experience Bullet Enhancement
+
+Automatically improve your experience descriptions with quantifiable achievements:
+
+```bash
+$ ./run.sh --enhance-experience --job-offer config/job_offer.txt
+```
+
+### Combined LLM Features
+
+Use both profile generation and experience enhancement together:
+
+```bash
+$ ./run.sh --llm --enhance-experience --job-offer config/job_offer.txt
+```
 
 ### For Users Without a LaTeX Engine Installed
 
@@ -190,6 +257,176 @@ $ ./run.sh --no-deps
 ```
 
 This option is useful for speeding up subsequent runs when you know that all dependencies are already satisfied.
+
+# LLM Integration
+
+CV Tools now includes powerful AI-powered features to enhance your resume with personalized content using Large Language Models (LLMs). This integration helps create more compelling and job-specific resumes by analyzing job requirements and tailoring your experience descriptions accordingly.
+
+## LLM Overview
+
+The LLM integration provides two main enhancements:
+
+1. **Professional Profile Generation**: AI creates a personalized professional summary based on your CV and the target job description
+2. **Experience Bullet Enhancement**: AI rewrites your experience bullets to emphasize job-relevant skills and add quantifiable achievements
+
+## API Providers
+
+CV Tools supports two LLM API providers:
+
+### Groq
+- **Default Provider**: Fast inference with models like `openai/gpt-oss-120b`
+- **Setup**: Requires `GROQ_API_KEY` in `.env` file
+- **Best for**: Cost-effective, fast processing
+
+### OpenRouter
+- **Alternative Provider**: Access to multiple models including GPT-4, Claude, and others
+- **Setup**: Requires `OPENROUTER_API_KEY` in `.env` file
+- **Best for**: Advanced models, flexibility
+
+## Environment Setup
+
+### 1. Choose Your API Provider
+
+Create or edit the `.env` file in your project root:
+
+```bash
+# For Groq (default)
+API_PROVIDER="groq"
+GROQ_API_KEY="your-groq-api-key-here"
+
+# OR for OpenRouter
+API_PROVIDER="openrouter"
+OPENROUTER_API_KEY="your-openrouter-api-key-here"
+```
+
+### 2. API Key Acquisition
+
+**Groq API Key:**
+- Visit [Groq Console](https://console.groq.com/)
+- Create an account and generate an API key
+- Add to `.env` as `GROQ_API_KEY`
+
+**OpenRouter API Key:**
+- Visit [OpenRouter](https://openrouter.ai/)
+- Sign up and get your API key
+- Add to `.env` as `OPENROUTER_API_KEY`
+
+### 3. Job Offer File
+
+Create a job offer file (e.g., `config/job_offer.txt`) containing the job description you want to target:
+
+```
+# Job Responsibilities
+
+- Efficiently utilize (Unify+) to organize data, create reporting dashboards, analyze results, and deliver business insights.
+- Contribute to a queue of project requests that involve recurring reporting, overlapping deadlines, and shifting project scopes.
+- Derive insights that help frame up and add value to Circana data.
+- Present findings in internal touch-bases and collaborative meetings.
+```
+
+## LLM Features
+
+### Professional Profile Generation
+
+Automatically generates a compelling 2-paragraph professional summary that:
+- Highlights your most relevant experience and skills
+- Aligns with the target job requirements
+- Uses industry-specific keywords
+- Maintains professional tone and first-person perspective
+
+**Example Output:**
+```
+Mechanical engineer with 5+ years of experience in energy systems modeling and data analysis. Specialized in developing TIMES framework scenarios for national energy transitions and quantifying corporate carbon footprints using GHG Protocol methodology.
+
+Expert in Python-based analytical tools, Google Cloud Platform, and advanced AI technologies including LlamaIndex and NLP models. Proven track record in leading cross-functional teams to deliver strategic insights for energy sector clients, with particular expertise in Latin American market dynamics.
+```
+
+### Experience Bullet Enhancement
+
+Transforms generic experience descriptions into impactful, quantifiable achievements:
+- Identifies job-relevant skills and experiences
+- Adds specific metrics and measurable outcomes
+- Incorporates industry keywords naturally
+- Maintains authenticity (never fabricates information)
+
+**Before:**
+```
+- Developed software solutions
+- Managed project teams
+- Improved system performance
+```
+
+**After:**
+```
+- Developed cloud-based analytics platform using Python, reducing data processing time by 40%
+- Led cross-functional team of 5 developers in agile methodology, delivering projects 25% under budget
+- Optimized database queries and system architecture, improving overall performance by 35%
+```
+
+## LLM Usage Examples
+
+### Basic LLM Profile Generation
+
+```bash
+# Generate CV with AI-enhanced professional profile
+./run.sh --llm --job-offer config/job_offer.txt
+```
+
+### Experience Bullet Enhancement
+
+```bash
+# Enhance experience bullets with AI
+./run.sh --enhance-experience --job-offer config/job_offer.txt
+```
+
+### Combined Features
+
+```bash
+# Use both LLM features together
+./run.sh --llm --enhance-experience --job-offer config/job_offer.txt
+```
+
+### Custom Configuration
+
+```bash
+# Use custom config and output files
+./run.sh -c config/my_cv.yaml -o output/my_cv.tex --llm --enhance-experience --job-offer config/senior_role.txt
+```
+
+## LLM Best Practices
+
+### Content Guidelines
+- **Authenticity**: LLM enhancements are based only on information in your CV
+- **Relevance**: Always provide a job offer file for best results
+- **Review**: Always review AI-generated content before final use
+- **Customization**: Use the generated content as a starting point for further personalization
+
+### Performance Tips
+- **Job-Specific Files**: Create separate job offer files for different applications
+- **Version Control**: Keep multiple versions of your CV for different roles
+- **API Selection**: Use Groq for faster processing, OpenRouter for advanced models
+- **Cost Management**: Monitor API usage, especially with OpenRouter
+
+### Troubleshooting
+
+**Common Issues:**
+- **Missing API Key**: Ensure correct API key in `.env` file
+- **Invalid Job File**: Verify job offer file exists and contains relevant content
+- **API Limits**: Check API provider limits and billing
+
+**Fallback Behavior:**
+- If LLM fails, original content is used
+- System continues with standard generation
+- Error messages guide troubleshooting
+
+### Unicode Character Handling
+
+The system automatically cleans Unicode characters from LLM responses to prevent LaTeX compilation errors:
+- Converts problematic Unicode spaces (U+202F) to regular spaces
+- Replaces special quotes and dashes with LaTeX-compatible equivalents
+- **Escapes ampersands (&) to \&** for proper LaTeX table compatibility
+- Removes or replaces non-ASCII characters that cause compilation issues
+- Maintains readability while ensuring LaTeX compatibility
 
 # YAML Configuration
 
