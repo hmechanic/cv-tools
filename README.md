@@ -36,13 +36,17 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 
 | Ubuntu                                                                                     | macOS                                                                                    |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| ![Ubuntu Build](https://github.com/mlsdpk/cv-tools/actions/workflows/ubuntu.yml/badge.svg) | ![macOS Build](https://github.com/mlsdpk/cv-tools/actions/workflows/macos.yml/badge.svg) |
+| ![Ubuntu Build](https://github.com/hmechanic/cv-tools/actions/workflows/ubuntu.yml/badge.svg) | ![macOS Build](https://github.com/hmechanic/cv-tools/actions/workflows/macos.yml/badge.svg) |
 
 # Table of Contents
 
 - [Getting Started](#getting-started)
-  - [Installation](#installation)
+  - [Docker Setup](#docker-setup-recommended)
+  - [Local Setup](#local-setup)
+  - [Private Configuration Files](#private-configuration-files)
   - [Usage](#usage)
+  - [Testing](#testing)
+  - [Dependency Updates](#dependency-updates)
 - [LLM Integration](#llm-integration)
   - [Overview](#llm-overview)
   - [API Providers](#api-providers)
@@ -59,167 +63,150 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 
 # Getting Started
 
-Below are two installation methods to set up and use CV Tools on your local machine. The Docker-based setup is recommended for a hassle-free experience. Alternatively, you can set up the tool manually from the source, which offers flexibility to either compile the PDF locally or generate the .tex file and use an external LaTeX renderer like [Overleaf](https://www.overleaf.com).
+CV Tools can run in Docker or from a local Python environment. Docker is recommended because the image contains Python, the locked Python dependencies, and TeX Live. Both methods write generated files to `output/`.
 
-## Installation
+## Docker Setup (Recommended)
 
-### Method 1: Using Docker (Recommended)
-
-Using docker allows you to run the tool in a consistent environment without worrying about dependencies on your local machine.
-
-#### Prerequisites
-
-- **Docker**: Ensure you have Docker installed on your machine. You can download and install Docker from [here](https://docs.docker.com/engine/install/).
-
-#### Steps
-
-Clone the Repository:
+Install Docker, then clone and build the repository:
 
 ```bash
-$ git clone https://github.com/mlsdpk/cv-tools.git
-$ cd cv-tools
+git clone https://github.com/hmechanic/cv-tools.git
+cd cv-tools
+docker build -t cv-tools .
 ```
 
-Build the Docker image using the provided `Dockerfile`.
+Run an interactive container and mount the repository at `/workdir`.
+
+Linux or macOS:
 
 ```bash
-$ docker build -t cv-tools .
+docker run --rm -it -v "$(pwd):/workdir" cv-tools
 ```
 
-Start a Docker container with the image you just built. This will launch an interactive shell with the virtual environment activated and mount the current cv-tools directory.
+Windows PowerShell:
+
+```powershell
+docker run --rm -it -v "${PWD}:/workdir" cv-tools
+```
+
+Windows Git Bash:
 
 ```bash
-$ docker run -it -v $(pwd):/workdir cv-tools
+docker run --rm -it -v "$(pwd -W):/workdir" cv-tools
 ```
 
-for windows systems:
-```bash
-$ docker run -it -v $(pwd -W):/workdir cv-tools
-```
-
-The `-v $(pwd):/workdir` option mounts your local cv-tools directory to the `/workdir` directory inside the container.
-
-### Method 2: From Source with Manual Installation
-
-If you prefer to set up the environment manually on your local machine, follow the steps below. This method offers two options:
-
-1. Use an external LaTeX renderer (e.g., [Overleaf](https://www.overleaf.com)) to compile the .tex file.
-2. Install a LaTeX engine locally and generate the PDF directly.
-
-#### Prerequisites
-
-- **Option 1: External LaTeX Renderer**
-
-  No LaTeX distribution is needed. You can generate the .tex file and upload it to tools like [Overleaf](https://www.overleaf.com).
-
-- **Option 2: Local LaTeX Setup**
-
-  Ensure you have a LaTeX distribution installed, such as [TeX Live](https://www.tug.org/texlive/) (recommended) or [MikTeX](https://miktex.org/).
-
-- **Python**: Python 3.x is required for running the build scripts.
-
-#### Installing Dependencies
-
-Clone the Repository:
+Inside the container, generate the default PDF without reinstalling dependencies:
 
 ```bash
-$ git clone https://github.com/mlsdpk/cv-tools.git
-$ cd cv-tools
+./run.sh --no-deps
 ```
 
-Set up a Python virtual environment and install dependencies:
+The bind mount exposes `output/output.tex` and `output/output.pdf` on the host. `.dockerignore` prevents API keys, job offers, private CV variants, and generated files from entering the Docker build context.
+
+## Local Setup
+
+Local development requires Python 3.12 and Bash. Install TeX Live or MiKTeX only to compile PDFs locally. Without a LaTeX engine, use `--tex-only` and compile `output/output.tex` together with `output/resume.cls` in Overleaf.
+
+Linux or macOS:
 
 ```bash
-$ python3 -m venv cv-tools
-$ source cv-tools/bin/activate
-$ pip install --require-hashes -r requirements.lock
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --require-hashes -r requirements.lock
 ```
 
-#### LLM Setup (Optional)
+Windows PowerShell:
 
-If you plan to use AI-powered features, configure your API keys:
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --require-hashes -r requirements.lock
+```
 
-1. **Create `.env` file:**
-   ```bash
-   $ cp .env.example .env  # If example exists, or create manually
-   ```
+Run `run.sh` from Git Bash or WSL on Windows. For local PDF generation, install the TeX packages listed in `packages.list`; `run.sh` can install them with `tlmgr` unless `--no-deps` is supplied.
 
-2. **Add your API keys to `.env`:**
-   ```bash
-   # Choose your provider
-   API_PROVIDER="groq"  # or "openrouter"
+`requirements.txt` contains the reviewed direct versions. `requirements.lock` is the installation source of truth and pins all transitive dependencies with package hashes.
 
-   # Add your API keys
-   GROQ_API_KEY="your-groq-key-here"
-   OPENROUTER_API_KEY="your-openrouter-key-here"
-   ```
+## Private Configuration Files
 
-3. **Create job offer file:**
-   ```bash
-   $ cp config/job_offer.txt.example config/job_offer.txt
-   # Edit config/job_offer.txt with your target job description
-   ```
-
-If you plan to use Option 2 (Local LaTeX Setup), ensure all required LaTeX packages are installed. The necessary packages are listed in the `packages.list` file.
-
-You can use the tlmgr command to install the packages as follows:
+Copy the sample CV to an ignored local path, then edit it:
 
 ```bash
-$ tlmgr install <package1> <package2> ...
+cp config/cv.yaml config/cv_en.yaml
 ```
 
-**Note:** If you plan to use LLM features with the OpenRouter API, the `requests` library is required and is included in `requirements.txt`.
+Use `config/cv_es.yaml` for a Spanish variant. Both files are excluded from Git and Docker and can be selected with `--config`.
+
+LLM features use three local files that are intentionally not committed:
+
+- `.env` stores the provider and API key.
+- `config/job_offer.txt` stores the target job description.
+- `config/longProfile.txt` stores additional professional background.
+
+Create `.env` in the repository root for one provider:
+
+```dotenv
+# Groq (default)
+API_PROVIDER="groq"
+GROQ_API_KEY="replace-with-your-key"
+
+# OpenRouter alternative:
+# API_PROVIDER="openrouter"
+# OPENROUTER_API_KEY="replace-with-your-key"
+```
+
+Create `config/job_offer.txt` as plain text. Profile generation with `--llm` also requires `config/longProfile.txt` in this format:
+
+```text
+Perfil extendido en español...
+=== Professional Profile (English) ===
+Extended professional profile in English...
+```
+
+Keep the English separator exactly as shown; the generator uses it to select content based on `heading.language`.
 
 ## Usage
 
-To generate a CV, you can use the provided shell script, which offers flexibility through various command-line options.
+Run `./run.sh --help` to list all supported options.
 
-## Default CV Generation
+### Default PDF Generation
 
-Running the script without any options will generate the CV using the default configuration (`cv.yaml`) located in the `config` directory.
+Generate `output/output.tex` and `output/output.pdf` from `config/cv.yaml`:
 
 ```bash
-$ ./run.sh
+./run.sh
 ```
 
-This command will also check and install all necessary dependencies before generating a `.tex` file and a PDF file, both of which will be saved in the `output` directory.
+After dependencies are installed, use `./run.sh --no-deps` for faster subsequent runs.
 
-## LLM-Enhanced CV Generation
+### LLM-Enhanced Generation
 
-CV Tools supports AI-powered personalization using Large Language Models. You can enhance your CV with job-specific content using the following options:
-
-### Professional Profile Generation
-
-Generate an AI-crafted professional summary tailored to your target job:
+Generate a professional profile tailored to the job offer:
 
 ```bash
-$ ./run.sh --llm --job-offer config/job_offer.txt
+./run.sh --llm --job-offer config/job_offer.txt
 ```
 
-### Experience Bullet Enhancement
-
-Automatically improve your experience descriptions with quantifiable achievements:
+Enhance experience bullets:
 
 ```bash
-$ ./run.sh --enhance-experience --job-offer config/job_offer.txt
+./run.sh --enhance-experience --job-offer config/job_offer.txt
 ```
 
-### Combined LLM Features
-
-Use both profile generation and experience enhancement together:
+Use both features:
 
 ```bash
-$ ./run.sh --llm --enhance-experience --job-offer config/job_offer.txt
+./run.sh --llm --enhance-experience --job-offer config/job_offer.txt
 ```
 
-### For Users Without a LaTeX Engine Installed
+LLM requests send the CV, extended profile, and job offer to the selected external provider. The generated prompt is printed to standard output, so avoid persisting logs that contain private information.
 
-> Note: If you are using the Docker-based setup, you can ignore this section as the PDF will be generated within the container automatically.
+### LaTeX Only
 
-If you don’t have a LaTeX engine installed locally, you can use the `--tex-only` option to generate the files required for an external LaTeX renderer:
+Without a local LaTeX engine, generate the two files required by Overleaf:
 
 ```bash
-$ ./run.sh --tex-only
+./run.sh --tex-only
 ```
 
 This will generate the following files in the output directory:
@@ -227,36 +214,57 @@ This will generate the following files in the output directory:
 - `output.tex`: The main LaTeX source file.
 - `resume.cls`: The LaTeX class file required to compile the CV.
 
-Upload both files to an external LaTeX renderer such as [Overleaf](https://www.overleaf.com) to produce the final PDF.
+Upload both files to Overleaf or another LaTeX renderer to produce the PDF. Docker users can generate the PDF directly and do not need this option.
 
-## Customize the CV Generation
+### Custom Configuration and Output
 
-You can customize the CV generation by specifying different configuration files, as well as changing the output file location.
+Select an ignored personal configuration and a custom output path:
 
-- **Specify a different YAML configuration file:**
-  ```bash
-  $ ./run.sh -c path/to/custom_config.yaml
-  ```
-- **Change the output file location:**
-  ```bash
-  $ ./run.sh -o path/to/output/custom_cv.tex
-  ```
+```bash
+./run.sh --config config/cv_en.yaml --output output/cv_en.tex
+```
 
-These options can be combined together as well to suit your needs.
+Options can be combined with `--tex-only`, `--llm`, and `--enhance-experience`.
 
 You can customize the content of your CV by editing the YAML configuration file. By default, this is the `cv.yaml` file located in the `config` directory, but you can specify a different YAML file from any location. This file allows you to define your personal details, education, work experience, skills, and more. You can add or remove sections, modify the fields, and tailor the CV content to your specific needs. The supported section types include `education`, `experience`, `skills`, `bullets`, `talks`, and `publications`. For more information, refer to [YAML Configuration](#yaml-configuration) section.
 
 This tool also supports to automatically list your publications based on BibTeX entries provided in a specified BibTeX file. By default, this is the `publications.bib` file located in the `config` directory, but you can use a different BibTeX file from any location. Refer to [BibTeX Configuration](#bibtex-configuration) section for more details on configuring BibTeX entries.
 
-## Skipping Dependency Checks and Installations
+### Skipping Dependency Installation
 
-If you already have all dependencies installed and want to skip the automatic checking and installation process, use the `--no-deps` option:
+Use this only when the locked Python dependencies and required TeX packages are already installed:
 
 ```bash
-$ ./run.sh --no-deps
+./run.sh --no-deps
 ```
 
-This option is useful for speeding up subsequent runs when you know that all dependencies are already satisfied.
+## Testing
+
+Run the unit tests without calling an external LLM API:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run a generation smoke test without invoking `pdflatex`:
+
+```bash
+./run.sh --tex-only --no-deps
+```
+
+## Dependency Updates
+
+Normal users should install `requirements.lock` and should not regenerate it. When intentionally updating `requirements.txt`, rebuild and audit the lockfile:
+
+```bash
+python -m pip install pip-tools pip-audit
+pip-compile --generate-hashes --strip-extras --output-file requirements.lock requirements.txt
+python -m pip install --require-hashes -r requirements.lock
+python -m unittest discover -s tests -v
+pip-audit -r requirements.lock
+```
+
+Dependabot monitors Python packages, GitHub Actions, and the Docker base image. Review and test its pull requests before merging.
 
 # LLM Integration
 
@@ -285,44 +293,9 @@ CV Tools supports two LLM API providers:
 
 ## Environment Setup
 
-### 1. Choose Your API Provider
+Follow [Private Configuration Files](#private-configuration-files) to create `.env`, `config/job_offer.txt`, and `config/longProfile.txt`. Obtain a key from the [Groq Console](https://console.groq.com/) or [OpenRouter](https://openrouter.ai/) and configure only the selected provider.
 
-Create or edit the `.env` file in your project root:
-
-```bash
-# For Groq (default)
-API_PROVIDER="groq"
-GROQ_API_KEY="your-groq-api-key-here"
-
-# OR for OpenRouter
-API_PROVIDER="openrouter"
-OPENROUTER_API_KEY="your-openrouter-api-key-here"
-```
-
-### 2. API Key Acquisition
-
-**Groq API Key:**
-- Visit [Groq Console](https://console.groq.com/)
-- Create an account and generate an API key
-- Add to `.env` as `GROQ_API_KEY`
-
-**OpenRouter API Key:**
-- Visit [OpenRouter](https://openrouter.ai/)
-- Sign up and get your API key
-- Add to `.env` as `OPENROUTER_API_KEY`
-
-### 3. Job Offer File
-
-Create a job offer file (e.g., `config/job_offer.txt`) containing the job description you want to target:
-
-```
-# Job Responsibilities
-
-- Efficiently utilize (Unify+) to organize data, create reporting dashboards, analyze results, and deliver business insights.
-- Contribute to a queue of project requests that involve recurring reporting, overlapping deadlines, and shifting project scopes.
-- Derive insights that help frame up and add value to Circana data.
-- Present findings in internal touch-bases and collaborative meetings.
-```
+Standard generation does not require an API key. `--llm` requires the job offer and extended profile; `--enhance-experience` requires the job offer. Missing keys or files produce an error without making an API request.
 
 ## LLM Features
 
@@ -345,22 +318,22 @@ Expert in Python-based analytical tools, Google Cloud Platform, and advanced AI 
 
 Transforms generic experience descriptions into impactful, quantifiable achievements:
 - Identifies job-relevant skills and experiences
-- Adds specific metrics and measurable outcomes
+- Preserves existing metrics and emphasizes measurable outcomes when the source contains them
 - Incorporates industry keywords naturally
-- Maintains authenticity (never fabricates information)
+- Prompts the provider not to invent information; always review the result
 
 **Before:**
 ```
-- Developed software solutions
-- Managed project teams
-- Improved system performance
+- Developed a Python analytics platform that reduced processing time by 40%
+- Led a cross-functional team of five developers
+- Improved database performance by 35%
 ```
 
 **After:**
 ```
 - Developed cloud-based analytics platform using Python, reducing data processing time by 40%
-- Led cross-functional team of 5 developers in agile methodology, delivering projects 25% under budget
-- Optimized database queries and system architecture, improving overall performance by 35%
+- Led a cross-functional team of five developers to deliver analytics capabilities
+- Optimized database queries and system architecture, improving performance by 35%
 ```
 
 ## LLM Usage Examples
@@ -390,7 +363,7 @@ Transforms generic experience descriptions into impactful, quantifiable achievem
 
 ```bash
 # Use custom config and output files
-./run.sh -c config/my_cv.yaml -o output/my_cv.tex --llm --enhance-experience --job-offer config/senior_role.txt
+./run.sh --config config/cv_en.yaml --output output/cv_en.tex --llm --enhance-experience --job-offer config/job_offer.txt
 ```
 
 ## LLM Best Practices
@@ -415,16 +388,16 @@ Transforms generic experience descriptions into impactful, quantifiable achievem
 - **API Limits**: Check API provider limits and billing
 
 **Fallback Behavior:**
-- If LLM fails, original content is used
-- System continues with standard generation
-- Error messages guide troubleshooting
+- Experience enhancement keeps the original bullet when a provider call fails.
+- Profile-generation errors are returned as generated content; inspect the output before use.
+- Provider errors do not expose API keys, but prompt content may already be present in standard output.
 
 ### Unicode Character Handling
 
 The system automatically cleans Unicode characters from LLM responses to prevent LaTeX compilation errors:
 - Converts problematic Unicode spaces (U+202F) to regular spaces
 - Replaces special quotes and dashes with LaTeX-compatible equivalents
-- **Escapes ampersands (&) to \&** for proper LaTeX table compatibility
+- Escapes LaTeX control characters such as `\`, `{`, `}`, `%`, `&`, `_`, `#`, and `$`
 - Removes or replaces non-ASCII characters that cause compilation issues
 - Maintains readability while ensuring LaTeX compatibility
 
