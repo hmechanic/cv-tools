@@ -10,6 +10,8 @@ A tool to automate the creation of professional LaTeX-based CVs.
 ![LaTeX](https://img.shields.io/badge/latex-%23008080.svg?style=for-the-badge&logo=latex&logoColor=white)
 ![Jinja](https://img.shields.io/badge/jinja-white.svg?style=for-the-badge&logo=jinja&logoColor=black)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-000000?style=for-the-badge&logo=groq&logoColor=white)
 
 ![cover photo](docs/img/cover.png)
 
@@ -25,18 +27,32 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 - **Flexible Configuration**: Easy-to-edit configuration files to personalize your CV.
 - **BibTeX Support**: Automatically generate a formatted list of publications from a BibTeX file.
 - **Automated Build Process**: Scripted build process to generate the final PDF CV.
+- **LLM Integration**: AI-powered personalization using Groq or OpenRouter APIs.
+- **Experience Enhancement**: Automatically improve experience bullets with quantifiable achievements.
+- **Professional Profile Generation**: AI-generated personalized professional summaries.
+- **Multi-API Support**: Choose between Groq and OpenRouter for LLM processing.
 
 # Build Status
 
 | Ubuntu                                                                                     | macOS                                                                                    |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| ![Ubuntu Build](https://github.com/mlsdpk/cv-tools/actions/workflows/ubuntu.yml/badge.svg) | ![macOS Build](https://github.com/mlsdpk/cv-tools/actions/workflows/macos.yml/badge.svg) |
+| ![Ubuntu Build](https://github.com/hmechanic/cv-tools/actions/workflows/ubuntu.yml/badge.svg) | ![macOS Build](https://github.com/hmechanic/cv-tools/actions/workflows/macos.yml/badge.svg) |
 
 # Table of Contents
 
 - [Getting Started](#getting-started)
-  - [Installation](#installation)
+  - [Docker Setup](#docker-setup-recommended)
+  - [Local Setup](#local-setup)
+  - [Private Configuration Files](#private-configuration-files)
   - [Usage](#usage)
+  - [Testing](#testing)
+  - [Dependency Updates](#dependency-updates)
+- [LLM Integration](#llm-integration)
+  - [Overview](#llm-overview)
+  - [API Providers](#api-providers)
+  - [Environment Setup](#environment-setup)
+  - [LLM Features](#llm-features)
+  - [Usage Examples](#llm-usage-examples)
 - [YAML Configuration](#yaml-configuration)
   - [Heading](#heading)
   - [Subheading](#subheading)
@@ -47,107 +63,150 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 
 # Getting Started
 
-Below are two installation methods to set up and use CV Tools on your local machine. The Docker-based setup is recommended for a hassle-free experience. Alternatively, you can set up the tool manually from the source, which offers flexibility to either compile the PDF locally or generate the .tex file and use an external LaTeX renderer like [Overleaf](https://www.overleaf.com).
+CV Tools can run in Docker or from a local Python environment. Docker is recommended because the image contains Python, the locked Python dependencies, and TeX Live. Both methods write generated files to `output/`.
 
-## Installation
+## Docker Setup (Recommended)
 
-### Method 1: Using Docker (Recommended)
-
-Using docker allows you to run the tool in a consistent environment without worrying about dependencies on your local machine.
-
-#### Prerequisites
-
-- **Docker**: Ensure you have Docker installed on your machine. You can download and install Docker from [here](https://docs.docker.com/engine/install/).
-
-#### Steps
-
-Clone the Repository:
+Install Docker, then clone and build the repository:
 
 ```bash
-$ git clone https://github.com/mlsdpk/cv-tools.git
-$ cd cv-tools
+git clone https://github.com/hmechanic/cv-tools.git
+cd cv-tools
+docker build -t cv-tools .
 ```
 
-Build the Docker image using the provided `Dockerfile`.
+Run an interactive container and mount the repository at `/workdir`.
+
+Linux or macOS:
 
 ```bash
-$ docker build -t cv-tools .
+docker run --rm -it -v "$(pwd):/workdir" cv-tools
 ```
 
-Start a Docker container with the image you just built. This will launch an interactive shell with the virtual environment activated and mount the current cv-tools directory.
+Windows PowerShell:
+
+```powershell
+docker run --rm -it -v "${PWD}:/workdir" cv-tools
+```
+
+Windows Git Bash:
 
 ```bash
-$ docker run -it -v $(pwd):/workdir cv-tools
+docker run --rm -it -v "$(pwd -W):/workdir" cv-tools
 ```
 
-The `-v $(pwd):/workdir` option mounts your local cv-tools directory to the `/workdir` directory inside the container.
-
-### Method 2: From Source with Manual Installation
-
-If you prefer to set up the environment manually on your local machine, follow the steps below. This method offers two options:
-
-1. Use an external LaTeX renderer (e.g., [Overleaf](https://www.overleaf.com)) to compile the .tex file.
-2. Install a LaTeX engine locally and generate the PDF directly.
-
-#### Prerequisites
-
-- **Option 1: External LaTeX Renderer**
-
-  No LaTeX distribution is needed. You can generate the .tex file and upload it to tools like [Overleaf](https://www.overleaf.com).
-
-- **Option 2: Local LaTeX Setup**
-
-  Ensure you have a LaTeX distribution installed, such as [TeX Live](https://www.tug.org/texlive/) (recommended) or [MikTeX](https://miktex.org/).
-
-- **Python**: Python 3.x is required for running the build scripts.
-
-#### Installing Dependencies
-
-Clone the Repository:
+Inside the container, generate the default PDF without reinstalling dependencies:
 
 ```bash
-$ git clone https://github.com/mlsdpk/cv-tools.git
-$ cd cv-tools
+./run.sh --no-deps
 ```
 
-Set up a Python virtual environment and install dependencies:
+The bind mount exposes `output/output.tex` and `output/output.pdf` on the host. `.dockerignore` prevents API keys, job offers, private CV variants, and generated files from entering the Docker build context.
+
+## Local Setup
+
+Local development requires Python 3.12 and Bash. Install TeX Live or MiKTeX only to compile PDFs locally. Without a LaTeX engine, use `--tex-only` and compile `output/output.tex` together with `output/resume.cls` in Overleaf.
+
+Linux or macOS:
 
 ```bash
-$ python3 -m venv cv-tools
-$ source cv-tools/bin/activate
-$ pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --require-hashes -r requirements.lock
 ```
 
-If you plan to use Option 2 (Local LaTeX Setup), ensure all required LaTeX packages are installed. The necessary packages are listed in the `packages.list` file.
+Windows PowerShell:
 
-You can use the tlmgr command to install the packages as follows:
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --require-hashes -r requirements.lock
+```
+
+Run `run.sh` from Git Bash or WSL on Windows. For local PDF generation, install the TeX packages listed in `packages.list`; `run.sh` can install them with `tlmgr` unless `--no-deps` is supplied.
+
+`requirements.txt` contains the reviewed direct versions. `requirements.lock` is the installation source of truth and pins all transitive dependencies with package hashes.
+
+## Private Configuration Files
+
+Copy the sample CV to an ignored local path, then edit it:
 
 ```bash
-$ tlmgr install <package1> <package2> ...
+cp config/cv.yaml config/cv_en.yaml
 ```
+
+Use `config/cv_es.yaml` for a Spanish variant. Both files are excluded from Git and Docker and can be selected with `--config`.
+
+LLM features use three local files that are intentionally not committed:
+
+- `.env` stores the provider and API key.
+- `config/job_offer.txt` stores the target job description.
+- `config/longProfile.txt` stores additional professional background.
+
+Create `.env` in the repository root for one provider:
+
+```dotenv
+# Groq (default)
+API_PROVIDER="groq"
+GROQ_API_KEY="replace-with-your-key"
+
+# OpenRouter alternative:
+# API_PROVIDER="openrouter"
+# OPENROUTER_API_KEY="replace-with-your-key"
+```
+
+Create `config/job_offer.txt` as plain text. Profile generation with `--llm` also requires `config/longProfile.txt` in this format:
+
+```text
+Perfil extendido en español...
+=== Professional Profile (English) ===
+Extended professional profile in English...
+```
+
+Keep the English separator exactly as shown; the generator uses it to select content based on `heading.language`.
 
 ## Usage
 
-To generate a CV, you can use the provided shell script, which offers flexibility through various command-line options.
+Run `./run.sh --help` to list all supported options.
 
-## Default CV Generation
+### Default PDF Generation
 
-Running the script without any options will generate the CV using the default configuration (`cv.yaml`) located in the `config` directory.
+Generate `output/output.tex` and `output/output.pdf` from `config/cv.yaml`:
 
 ```bash
-$ ./run.sh
+./run.sh
 ```
 
-This command will also check and install all necessary dependencies before generating a `.tex` file and a PDF file, both of which will be saved in the `output` directory.
+After dependencies are installed, use `./run.sh --no-deps` for faster subsequent runs.
 
-### For Users Without a LaTeX Engine Installed
+### LLM-Enhanced Generation
 
-> Note: If you are using the Docker-based setup, you can ignore this section as the PDF will be generated within the container automatically.
-
-If you don’t have a LaTeX engine installed locally, you can use the `--tex-only` option to generate the files required for an external LaTeX renderer:
+Generate a professional profile tailored to the job offer:
 
 ```bash
-$ ./run.sh --tex-only
+./run.sh --llm --job-offer config/job_offer.txt
+```
+
+Enhance experience bullets:
+
+```bash
+./run.sh --enhance-experience --job-offer config/job_offer.txt
+```
+
+Use both features:
+
+```bash
+./run.sh --llm --enhance-experience --job-offer config/job_offer.txt
+```
+
+LLM requests send the CV, extended profile, and job offer to the selected external provider. The generated prompt is printed to standard output, so avoid persisting logs that contain private information.
+
+### LaTeX Only
+
+Without a local LaTeX engine, generate the two files required by Overleaf:
+
+```bash
+./run.sh --tex-only
 ```
 
 This will generate the following files in the output directory:
@@ -155,36 +214,192 @@ This will generate the following files in the output directory:
 - `output.tex`: The main LaTeX source file.
 - `resume.cls`: The LaTeX class file required to compile the CV.
 
-Upload both files to an external LaTeX renderer such as [Overleaf](https://www.overleaf.com) to produce the final PDF.
+Upload both files to Overleaf or another LaTeX renderer to produce the PDF. Docker users can generate the PDF directly and do not need this option.
 
-## Customize the CV Generation
+### Custom Configuration and Output
 
-You can customize the CV generation by specifying different configuration files, as well as changing the output file location.
+Select an ignored personal configuration and a custom output path:
 
-- **Specify a different YAML configuration file:**
-  ```bash
-  $ ./run.sh -c path/to/custom_config.yaml
-  ```
-- **Change the output file location:**
-  ```bash
-  $ ./run.sh -o path/to/output/custom_cv.tex
-  ```
+```bash
+./run.sh --config config/cv_en.yaml --output output/cv_en.tex
+```
 
-These options can be combined together as well to suit your needs.
+Options can be combined with `--tex-only`, `--llm`, and `--enhance-experience`.
 
 You can customize the content of your CV by editing the YAML configuration file. By default, this is the `cv.yaml` file located in the `config` directory, but you can specify a different YAML file from any location. This file allows you to define your personal details, education, work experience, skills, and more. You can add or remove sections, modify the fields, and tailor the CV content to your specific needs. The supported section types include `education`, `experience`, `skills`, `bullets`, `talks`, and `publications`. For more information, refer to [YAML Configuration](#yaml-configuration) section.
 
 This tool also supports to automatically list your publications based on BibTeX entries provided in a specified BibTeX file. By default, this is the `publications.bib` file located in the `config` directory, but you can use a different BibTeX file from any location. Refer to [BibTeX Configuration](#bibtex-configuration) section for more details on configuring BibTeX entries.
 
-## Skipping Dependency Checks and Installations
+### Skipping Dependency Installation
 
-If you already have all dependencies installed and want to skip the automatic checking and installation process, use the `--no-deps` option:
+Use this only when the locked Python dependencies and required TeX packages are already installed:
 
 ```bash
-$ ./run.sh --no-deps
+./run.sh --no-deps
 ```
 
-This option is useful for speeding up subsequent runs when you know that all dependencies are already satisfied.
+## Testing
+
+Run the unit tests without calling an external LLM API:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run a generation smoke test without invoking `pdflatex`:
+
+```bash
+./run.sh --tex-only --no-deps
+```
+
+## Dependency Updates
+
+Normal users should install `requirements.lock` and should not regenerate it. When intentionally updating `requirements.txt`, rebuild and audit the lockfile:
+
+```bash
+python -m pip install pip-tools pip-audit
+pip-compile --generate-hashes --strip-extras --output-file requirements.lock requirements.txt
+python -m pip install --require-hashes -r requirements.lock
+python -m unittest discover -s tests -v
+pip-audit -r requirements.lock
+```
+
+Dependabot monitors Python packages, GitHub Actions, and the Docker base image. Review and test its pull requests before merging.
+
+# LLM Integration
+
+CV Tools now includes powerful AI-powered features to enhance your resume with personalized content using Large Language Models (LLMs). This integration helps create more compelling and job-specific resumes by analyzing job requirements and tailoring your experience descriptions accordingly.
+
+## LLM Overview
+
+The LLM integration provides two main enhancements:
+
+1. **Professional Profile Generation**: AI creates a personalized professional summary based on your CV and the target job description
+2. **Experience Bullet Enhancement**: AI rewrites your experience bullets to emphasize job-relevant skills and add quantifiable achievements
+
+## API Providers
+
+CV Tools supports two LLM API providers:
+
+### Groq
+- **Default Provider**: Fast inference with models like `openai/gpt-oss-120b`
+- **Setup**: Requires `GROQ_API_KEY` in `.env` file
+- **Best for**: Cost-effective, fast processing
+
+### OpenRouter
+- **Alternative Provider**: Access to multiple models including GPT-4, Claude, and others
+- **Setup**: Requires `OPENROUTER_API_KEY` in `.env` file
+- **Best for**: Advanced models, flexibility
+
+## Environment Setup
+
+Follow [Private Configuration Files](#private-configuration-files) to create `.env`, `config/job_offer.txt`, and `config/longProfile.txt`. Obtain a key from the [Groq Console](https://console.groq.com/) or [OpenRouter](https://openrouter.ai/) and configure only the selected provider.
+
+Standard generation does not require an API key. `--llm` requires the job offer and extended profile; `--enhance-experience` requires the job offer. Missing keys or files produce an error without making an API request.
+
+## LLM Features
+
+### Professional Profile Generation
+
+Automatically generates a compelling 2-paragraph professional summary that:
+- Highlights your most relevant experience and skills
+- Aligns with the target job requirements
+- Uses industry-specific keywords
+- Maintains professional tone and first-person perspective
+
+**Example Output:**
+```
+Mechanical engineer with 5+ years of experience in energy systems modeling and data analysis. Specialized in developing TIMES framework scenarios for national energy transitions and quantifying corporate carbon footprints using GHG Protocol methodology.
+
+Expert in Python-based analytical tools, Google Cloud Platform, and advanced AI technologies including LlamaIndex and NLP models. Proven track record in leading cross-functional teams to deliver strategic insights for energy sector clients, with particular expertise in Latin American market dynamics.
+```
+
+### Experience Bullet Enhancement
+
+Transforms generic experience descriptions into impactful, quantifiable achievements:
+- Identifies job-relevant skills and experiences
+- Preserves existing metrics and emphasizes measurable outcomes when the source contains them
+- Incorporates industry keywords naturally
+- Prompts the provider not to invent information; always review the result
+
+**Before:**
+```
+- Developed a Python analytics platform that reduced processing time by 40%
+- Led a cross-functional team of five developers
+- Improved database performance by 35%
+```
+
+**After:**
+```
+- Developed cloud-based analytics platform using Python, reducing data processing time by 40%
+- Led a cross-functional team of five developers to deliver analytics capabilities
+- Optimized database queries and system architecture, improving performance by 35%
+```
+
+## LLM Usage Examples
+
+### Basic LLM Profile Generation
+
+```bash
+# Generate CV with AI-enhanced professional profile
+./run.sh --llm --job-offer config/job_offer.txt
+```
+
+### Experience Bullet Enhancement
+
+```bash
+# Enhance experience bullets with AI
+./run.sh --enhance-experience --job-offer config/job_offer.txt
+```
+
+### Combined Features
+
+```bash
+# Use both LLM features together
+./run.sh --llm --enhance-experience --job-offer config/job_offer.txt
+```
+
+### Custom Configuration
+
+```bash
+# Use custom config and output files
+./run.sh --config config/cv_en.yaml --output output/cv_en.tex --llm --enhance-experience --job-offer config/job_offer.txt
+```
+
+## LLM Best Practices
+
+### Content Guidelines
+- **Authenticity**: LLM enhancements are based only on information in your CV
+- **Relevance**: Always provide a job offer file for best results
+- **Review**: Always review AI-generated content before final use
+- **Customization**: Use the generated content as a starting point for further personalization
+
+### Performance Tips
+- **Job-Specific Files**: Create separate job offer files for different applications
+- **Version Control**: Keep multiple versions of your CV for different roles
+- **API Selection**: Use Groq for faster processing, OpenRouter for advanced models
+- **Cost Management**: Monitor API usage, especially with OpenRouter
+
+### Troubleshooting
+
+**Common Issues:**
+- **Missing API Key**: Ensure correct API key in `.env` file
+- **Invalid Job File**: Verify job offer file exists and contains relevant content
+- **API Limits**: Check API provider limits and billing
+
+**Fallback Behavior:**
+- Experience enhancement keeps the original bullet when a provider call fails.
+- Profile-generation errors are returned as generated content; inspect the output before use.
+- Provider errors do not expose API keys, but prompt content may already be present in standard output.
+
+### Unicode Character Handling
+
+The system automatically cleans Unicode characters from LLM responses to prevent LaTeX compilation errors:
+- Converts problematic Unicode spaces (U+202F) to regular spaces
+- Replaces special quotes and dashes with LaTeX-compatible equivalents
+- Escapes LaTeX control characters such as `\`, `{`, `}`, `%`, `&`, `_`, `#`, and `$`
+- Removes or replaces non-ASCII characters that cause compilation issues
+- Maintains readability while ensuring LaTeX compatibility
 
 # YAML Configuration
 
@@ -196,12 +411,14 @@ The `heading` parameter sets the main title of the CV.
 | Field | Type | Description | Required |
 |-------|------|-------------|-----------|
 | `name` | string | The name of the author, displayed as the main heading. | Yes |
+| `language` | string | The language of the CV. Supported values are `en` (English) and `es` (Spanish). Defaults to `en`. | No |
 
 Example:
 
 ```yaml
 heading:
   name: "John Doe" # The name of the CV author
+  language: "en"
 ```
 
 ## Subheading
@@ -274,12 +491,27 @@ The `sections` parameter allows you to define different sections of your CV, eac
 | `talks`        | Lists talks, workshops, and lectures given.             |
 | `publications` | Lists research papers, articles, or other publications. |
 | `newpage`      | Inserts a new page in the CV.                           |
+| `professional_profile` | Provides a brief summary of your professional background and skills. |
 
 Each section type has specific fields and formatting rules. Below are detailed descriptions and example YAML configurations for each section type.
 
 ### 1. Education
 
-The `education` section is used to list your academic qualifications. It typically includes details like the university name, location, dates, degree, honors, thesis title, and supervisor.
+The `education` section is used to list your academic qualifications.
+
+| Key       | Type   | Description                  | Required |
+| --------- | ------ | ---------------------------- | -------- |
+| `type`    | string | Must be `education`.         | Yes      |
+| `content` | list   | List of education entries.   | Yes      |
+
+**Education Entry**
+
+| Key      | Type   | Description                                                                                             | Required |
+| -------- | ------ | ------------------------------------------------------------------------------------------------------- | -------- |
+| `name`   | string | Title of the education section.                                                                         | Yes      |
+| `entity` | list   | List of education entities. This is used to group relevant educational experiences under a single section. | Yes      |
+
+**Education Entity**
 
 | Field          | Type   | Description                                     | Required |
 | -------------- | ------ | ----------------------------------------------- | -------- |
@@ -297,18 +529,20 @@ Example:
 sections:
   - type: education
     content:
-      - university: "Fictional University"
-        location: "Imaginaria, Wonderland"
-        dates: "September 2021 - June 2024"
-        degree: "Bachelor of Science in Computer Science"
-        honors: "Magna Cum Laude"
-        thesis_title: "An Exploration of Quantum Computing in Virtual Environments"
-        supervisor: "Dr. Alice Wonder"
-      - university: "Imaginary Institute of Technology"
-        location: "Nowhere City, Utopia"
-        dates: "August 2018 - May 2021"
-        degree: "Associate Degree in Artificial Intelligence"
-        supervisor: "Dr. Bob Builder"
+      - name: "Education"
+        entity:
+          - university: "Fictional University"
+            location: "Imaginaria, Wonderland"
+            dates: "September 2021 - June 2024"
+            degree: "Bachelor of Science in Computer Science"
+            honors: "Magna Cum Laude"
+            thesis_title: "An Exploration of Quantum Computing in Virtual Environments"
+            supervisor: "Dr. Alice Wonder"
+          - university: "Imaginary Institute of Technology"
+            location: "Nowhere City, Utopia"
+            dates: "August 2018 - May 2021"
+            degree: "Associate Degree in Artificial Intelligence"
+            supervisor: "Dr. Bob Builder"
 ```
 
 ![education-section](docs/img/education-section.png)
@@ -414,29 +648,40 @@ Example:
 
 ### 4. Skills
 
-| Key       | Description       |
-| --------- | ----------------- |
-| `type`    | Must be `skills`. |
-| `content` | List of skills.   |
+The `skills` section is used to list your skills, languages, tools, and technologies.
+
+| Key       | Type   | Description            | Required |
+| --------- | ------ | ---------------------- | -------- |
+| `type`    | string | Must be `skills`.      | Yes      |
+| `content` | list   | List of skill entries. | Yes      |
 
 **Skills Entry**
 
-| Key    | Description                     |
-| ------ | ------------------------------- |
-| `name` | Title of the skills category.   |
-| `data` | List of skills or technologies. |
+| Key      | Type   | Description                                                                               | Required |
+| -------- | ------ | ----------------------------------------------------------------------------------------- | -------- |
+| `name`   | string | Title of the skills section.                                                              | Yes      |
+| `entity` | list   | List of skill entities. This is used to group relevant skills together under a single section. | Yes      |
+
+**Skills Entity**
+
+| Key    | Type   | Description                     | Required |
+| ------ | ------ | ------------------------------- | -------- |
+| `name` | string | Title of the skills category.   | Yes      |
+| `data` | string | List of skills or technologies. | Yes      |
 
 Example:
 
 ```yaml
 - type: skills
   content:
-    - name: "Spoken Languages"
-      data: "English (Fluent), Spanish (Intermediate)"
-    - name: "Programming Languages"
-      data: "Python, Java, C++, SQL, JavaScript"
-    - name: "Tools and Technologies"
-      data: "AWS, Docker, Kubernetes, TensorFlow, Git, Jenkins, Linux, Jira"
+    - name: "Skills"
+      entity:
+        - name: "Spoken Languages"
+          data: "English (Fluent), Spanish (Intermediate)"
+        - name: "Programming Languages"
+          data: "Python, Java, C++, SQL, JavaScript"
+        - name: "Tools and Technologies"
+          data: "AWS, Docker, Kubernetes, TensorFlow, Git, Jenkins, Linux, Jira"
 ```
 
 ![skills-section](docs/img/skills-section.png)
@@ -514,6 +759,25 @@ Example:
 ```yaml
 sections:
   - type: newpage
+```
+
+### 8. Professional Profile
+
+The `professional_profile` section is used to provide a brief summary of your professional background and skills.
+
+| Key       | Type   | Description                                                     | Required |
+| --------- | ------ | --------------------------------------------------------------- | -------- |
+| `type`    | string | Must be `professional_profile`.                                 | Yes      |
+| `title`   | string | The title of the section (e.g., "Professional Profile").        | Yes      |
+| `content` | string | A paragraph describing your professional profile.               | Yes      |
+
+Example:
+
+```yaml
+sections:
+  - type: professional_profile
+    title: "Professional Profile"
+    content: "A highly motivated and results-oriented software engineer with over 5 years of experience in developing and maintaining web applications. Proficient in Python, JavaScript, and various cloud technologies. Seeking to leverage my skills to contribute to a dynamic and innovative team."
 ```
 
 An example of a complete YAML configuration can be found [here](config/cv.yaml).
@@ -594,6 +858,7 @@ Managing your publications is straightforward with a BibTeX file. The BibTeX fil
 ```
 
 Your publications will be included in the CV in the order they appear in the .bib file. An example BibTeX data file is provided [here](config/publications.bib).
+
 
 # Contributing
 

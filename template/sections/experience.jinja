@@ -9,6 +9,9 @@
     { {%-if entry.supervisor-%}Supervisor: {{ entry.supervisor }}{% endif %}}
     { {%-if entry.department-%}{{-entry.department-}}\\{% endif %}
     {{-entry.location-}}}
+    {%-if entry.certificate-%}
+    \item[]\href{ {{-entry.certificate-}} }{View Certificate}
+    {%-endif-%}
     {%-if entry.responsibilities-%}
     {%-for responsibility in entry.responsibilities-%}
         \item {{ responsibility}}

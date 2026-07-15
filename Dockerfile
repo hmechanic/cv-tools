@@ -1,5 +1,5 @@
-# Use the texlive/texlive image as the base image
-FROM texlive/texlive:latest
+# Pin the multi-platform manifest so builds use the reviewed TeX Live image.
+FROM texlive/texlive:latest@sha256:d39efa547acfa518072600315280f92357ca8e0b9e295e09b6ccd5f5d82a1373
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,11 +14,11 @@ RUN apt-get update && \
 RUN python3 -m venv $VENV_PATH
 
 # Install Python dependencies
-COPY requirements.txt /app/
-RUN $VENV_PATH/bin/pip install --upgrade pip setuptools wheel && \
-    $VENV_PATH/bin/pip install -r /app/requirements.txt
+COPY requirements.lock /app/
+RUN $VENV_PATH/bin/pip install --require-hashes -r /app/requirements.lock
 
 # Setup entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+WORKDIR /workdir
 ENTRYPOINT ["/entrypoint.sh"]

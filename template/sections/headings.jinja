@@ -41,16 +41,17 @@
 \name{ {{heading.name}} }
 {%-endmacro-%}
 
-{% macro render_subheading(subheading) %}
+{% macro render_subheading(heading, subheading) %}
 % ====================== Sub-heading Section ====================== %
 \address{
 {{ __render_entity(subheading, false) }} }
 
-\address{
-{%- set rendered_content = __render_entity(subheading, true) -%}
-{{ rendered_content }}
+{%- set rendered_content = __render_entity(subheading, true) | trim -%}
+{%- set cv_title = "Hoja de Vida" if heading.language == "es" else "Curriculum Vitae" -%}
+
 {%- if rendered_content -%}
-\\
-{%- endif %}
-Curriculum Vitae, \customdate\today}
+    \address{ {{ rendered_content }} \\ {{ cv_title }}, \customdate\today }
+{%- else -%}
+    \address{ {{ cv_title }}, \customdate\today }
+{%- endif -%}
 {% endmacro %}

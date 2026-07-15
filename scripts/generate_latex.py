@@ -1,17 +1,17 @@
 # MIT License
-# 
+#
 # Copyright (c) 2024 Phone Thiha Kyaw
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,19 +29,19 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 from pybtex.database import parse_file
-
+from use_LLM import generate_professional_profile, generate_experience_bullets
 
 def load_config(config_path):
     """Load YAML configuration file."""
     with open(config_path) as file:
         return yaml.safe_load(file)
-    
+
 def format_name(person):
     """Format the name by combining first, middle, and last names."""
     first_names = ' '.join(person.first_names) if person.first_names else ''
     middle_names = ' '.join(person.middle_names) if person.middle_names else ''
     last_names = ' '.join(person.last_names) if person.last_names else ''
-    
+
     full_name = re.sub(r'\s+', ' ', f"{first_names} {middle_names} {last_names}").strip()
     return full_name
 
@@ -49,7 +49,7 @@ def load_bibtex(bibtex_path, author_name=""):
     """Load BibTeX file and extract publication data."""
     bib_data = parse_file(bibtex_path)
     publications = []
-    
+
     for entry in bib_data.entries.values():
         authors_list = []
         for person in entry.persons['author']:
@@ -68,7 +68,7 @@ def load_bibtex(bibtex_path, author_name=""):
             elif authors_list:
                 return authors_list[0]
             return ''
-        
+
         authors = format_authors(authors_list)
 
         publications.append({
@@ -78,31 +78,39 @@ def load_bibtex(bibtex_path, author_name=""):
             'year': entry.fields['year'],
             'link': entry.fields.get('url', '')
         })
-    
+
     return publications
 
 def decode_special_characters(text):
-    # Convert bold (**text**) to LaTeX \textbf{text}
-    text = re.sub(r'\*\*(.*?)\*\*', r'\\textbf{\1}', text)
+    """Convert special characters to LaTeX format with error handling."""
+    if not text or not isinstance(text, str):
+        return text
 
-    # Convert italics (*text*) to LaTeX \textit{text}
-    text = re.sub(r'\*(.*?)\*', r'\\textit{\1}', text)
+    try:
+        # Convert bold (**text**) to LaTeX \textbf{text}
+        text = re.sub(r'\*\*(.*?)\*\*', r'\\textbf{\1}', text)
 
-    # Convert markdown links [text](url) to LaTeX \href{url}{text}
-    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'\\href{\2}{\1}', text)
+        # Convert italics (*text*) to LaTeX \textit{text}
+        text = re.sub(r'\*(.*?)\*', r'\\textit{\1}', text)
 
-    # Convert newline characters (\n) to LaTeX \\ for line breaks
-    text = text.replace('\n', '\\\\')
+        # Convert markdown links [text](url) to LaTeX \href{url}{text}
+        text = re.sub(r'\[(.*?)\]\((.*?)\)', r'\\href{\2}{\1}', text)
 
-    # Convert horizontal spacing
-    text = re.sub(r' {4}', r'\\quad ', text)   # Replace 4 spaces with \quad
-    text = re.sub(r'\t', r'\\quad ', text)     # Replace tab with \quad
-    text = re.sub(r' {2}', r'\\ ', text)       # Replace 2 spaces with a small space in LaTeX
+        # Convert newline characters (\n) to LaTeX \\ for line breaks
+        text = text.replace('\n', '\\\\')
 
-    # Convert 'quoted text' to LaTeX-style quotes ``quoted text''
-    text = re.sub(r"(?<!\w)'([^']+)'(?!\w)", r"``\1''", text)
+        # Convert horizontal spacing
+        text = re.sub(r' {4}', r'\\quad ', text)   # Replace 4 spaces with \quad
+        text = re.sub(r'\t', r'\\quad ', text)     # Replace tab with \quad
+        text = re.sub(r' {2}', r'\\ ', text)       # Replace 2 spaces with a small space in LaTeX
 
-    # Add more conversions if needed
+        # Convert 'quoted text' to LaTeX-style quotes ``quoted text''
+        text = re.sub(r"(?<!\w)'([^']+)'(?!\w)", r"``\1''", text)
+
+    except Exception as e:
+        # If there's any error in processing, return the original text
+        print(f"Warning: Error processing special characters in text: {e}")
+        return text
 
     return text
 
@@ -112,12 +120,16 @@ def transform_configs(data):
     elif isinstance(data, list):
         return [transform_configs(item) for item in data]
     elif isinstance(data, str):
-        return decode_special_characters(data) 
+        return decode_special_characters(data)
     return data
 
 def render_template(template_dir, template_file, config):
     """Render the Jinja2 template with the configuration data."""
-    env = Environment(loader=FileSystemLoader(template_dir))
+    # HTML autoescaping is not valid for LaTeX; LLM output is escaped at ingress.
+    env = Environment(  # nosec B701
+        loader=FileSystemLoader(template_dir),
+        autoescape=False,
+    )
 
     # Register all the filters here if needed
     # env.filters['markdown_to_latex'] = markdown_to_latex
@@ -140,14 +152,49 @@ def main():
     parser.add_argument('config', type=str, help="Path to the YAML configuration file.")
     parser.add_argument('template', type=str, help="Path to the Jinja2 template file.")
     parser.add_argument('output', type=str, help="Path to save the generated LaTeX file.")
-    
+    parser.add_argument('--llm', action='store_true', help="Enable LLM processing")
+    parser.add_argument('--enhance-experience', action='store_true', help="Enhance experience bullets with LLM")
+    parser.add_argument('--job-offer', help="Path to job offer file (required if --llm or --enhance-experience is set)")
+
     args = parser.parse_args()
-    
+
+    if (args.llm or args.enhance_experience) and not args.job_offer:
+        parser.error("--job-offer is required when --llm or --enhance-experience is enabled")
+
     # Extract directory and file names
     template_dir, template_file = os.path.split(args.template)
-    
+
     # Load config
     config = load_config(args.config)
+    # Extract directory and file names
+    config_dir, template_file = os.path.split(args.template)
+
+
+    if args.llm:
+        # Generate professional profile using LLM
+        profile_generated = generate_professional_profile(config, args.job_offer)
+        config['professional_profile']["content"] = profile_generated
+
+    if args.enhance_experience:
+        # Enhance experience bullets using LLM
+        print("Enhancing experience bullets with LLM...")
+        for section in config['sections']:
+            if section['type'] == 'experience':
+                for exp_group in section['content']:
+                    for entry in exp_group['entity']:
+                        if 'responsibilities' in entry and entry['responsibilities']:
+                            original_bullets = entry['responsibilities']
+                            enhanced_bullets = generate_experience_bullets(
+                                config, args.job_offer, exp_group['name'], original_bullets
+                            )
+                            entry['responsibilities'] = enhanced_bullets
+                            print(f"Enhanced {len(enhanced_bullets)} bullets for {entry['position']} at {entry['organization']}")
+
+    if not args.llm and not args.enhance_experience:
+        print("Using standard generation (no LLM enhancements)")
+
+
+    # print(f"Loaded config: {config['professional_profile']}")
 
     # resolve YAML path directory
     config_dir = Path(args.config).resolve().parent
@@ -169,7 +216,7 @@ def main():
 
             # If BibTeX file is found, load it and update the config
             _type['content'] = load_bibtex(bibfile_path, config['heading']['name'])
-    
+
     # render template, and save output
     output_data = render_template(template_dir, template_file, config)
     save_output(args.output, output_data)

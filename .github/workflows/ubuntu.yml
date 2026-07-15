@@ -8,8 +8,11 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      os: ubuntu-latest
+      os: ubuntu-24.04
