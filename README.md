@@ -63,7 +63,7 @@ Feel free to edit and use this tool according to your needs. Customize the LaTeX
 
 # Getting Started
 
-CV Tools can run in Docker or from a local Python environment. Docker is recommended because the image contains Python, the locked Python dependencies, and TeX Live. Both methods write generated files to `output/`.
+CV Tools can run in Docker or from a local Python environment. Docker is recommended because the image contains Python 3.12.12, the locked Python dependencies, and TeX Live. Both methods write generated files to `output/`.
 
 ## Docker Setup (Recommended)
 
@@ -80,7 +80,10 @@ Run an interactive container and mount the repository at `/workdir`.
 Linux or macOS:
 
 ```bash
-docker run --rm -it -v "$(pwd):/workdir" cv-tools
+docker run --rm -it \
+  --user "$(id -u):$(id -g)" \
+  -v "$(pwd):/workdir" \
+  cv-tools
 ```
 
 Windows PowerShell:
@@ -101,7 +104,7 @@ Inside the container, generate the default PDF without reinstalling dependencies
 ./run.sh --no-deps
 ```
 
-The bind mount exposes `output/output.tex` and `output/output.pdf` on the host. `.dockerignore` prevents API keys, job offers, private CV variants, and generated files from entering the Docker build context.
+The bind mount exposes `output/output.tex` and `output/output.pdf` on the host. On Linux and macOS, passing the host UID and GID keeps generated files owned by the current user; the image also defaults to the unprivileged `texlive` user. `.dockerignore` prevents API keys, job offers, private CV variants, and generated files from entering the Docker build context.
 
 ## Local Setup
 
